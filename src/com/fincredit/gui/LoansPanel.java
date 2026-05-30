@@ -1,7 +1,8 @@
 package com.fincredit.gui;
 
 import com.fincredit.model.Client;
-import com.fincredit.model.Person;
+import com.fincredit.model.Loan;
+import com.fincredit.model.LoanProduct;
 import com.fincredit.registry.LoanRegistry;
 
 import javax.swing.*;
@@ -9,7 +10,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-public class ClientsPanel extends JPanel {
+public class LoansPanel extends JPanel {
 
     private static final Color BG_NAVY    = new Color(1,  33, 105);
     private static final Color RED_ACCENT = new Color(227, 24, 55);
@@ -22,11 +23,11 @@ public class ClientsPanel extends JPanel {
     // Manejo de objetos: instancia única del registro
     private final LoanRegistry registry = LoanRegistry.getInstance();
 
-    // Referencia al CardLayout del MainFrame para navegar
+    // Navegación
     private final CardLayout cardLayout;
     private final JPanel mainPanel;
 
-    public ClientsPanel(CardLayout cardLayout, JPanel mainPanel) {
+    public LoansPanel(CardLayout cardLayout, JPanel mainPanel) {
         this.cardLayout = cardLayout;
         this.mainPanel  = mainPanel;
 
@@ -35,7 +36,7 @@ public class ClientsPanel extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(24, 28, 24, 28));
 
         add(buildTopBar(), BorderLayout.NORTH);
-        add(buildTable(), BorderLayout.CENTER);
+        add(buildTable(),  BorderLayout.CENTER);
     }
 
     // ── TOP BAR ───────────────────────────────────────────────
@@ -49,14 +50,19 @@ public class ClientsPanel extends JPanel {
         titleBlock.setOpaque(false);
         titleBlock.setLayout(new BoxLayout(titleBlock, BoxLayout.Y_AXIS));
 
-        JLabel lblTitle = new JLabel("Registered Clients");
+        JLabel lblTitle = new JLabel("Loan Requests");
         lblTitle.setForeground(TEXT_DARK);
         lblTitle.setFont(new Font("SansSerif", Font.BOLD, 18));
         lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Herencia: getRole() llamado en Person retorna "CLIENT"
+        // Datos reales del registry
+        List<Loan> loans = registry.getAllLoans();
+        long approved = loans.stream().filter(Loan::isApproved).count();
+        long rejected = loans.stream()
+                .filter(l -> l.getStatus() == Loan.Status.REJECTED).count();
+
         JLabel lblSub = new JLabel(
-            registry.getAllClients().size() + " clients registered · Role: CLIENT"
+            loans.size() + " total  ·  " + approved + " approved  ·  " + rejected + " rejected"
         );
         lblSub.setForeground(TEXT_MUTED);
         lblSub.setFont(new Font("SansSerif", Font.PLAIN, 12));
@@ -67,8 +73,8 @@ public class ClientsPanel extends JPanel {
         titleBlock.add(lblSub);
         bar.add(titleBlock, BorderLayout.WEST);
 
-        // Botón navega a NewClientPanel
-        JButton btnNew = new JButton("+ New Client");
+        // Botón navega a NewLoanPanel
+        JButton btnNew = new JButton("+ Request Loan");
         btnNew.setBackground(BG_NAVY);
         btnNew.setForeground(Color.WHITE);
         btnNew.setFont(new Font("SansSerif", Font.BOLD, 12));
@@ -76,7 +82,7 @@ public class ClientsPanel extends JPanel {
         btnNew.setFocusPainted(false);
         btnNew.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btnNew.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        btnNew.addActionListener(e -> cardLayout.show(mainPanel, "newClient"));
+        btnNew.addActionListener(e -> cardLayout.show(mainPanel, "newLoan"));
 
         btnNew.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent e) {
@@ -110,13 +116,12 @@ public class ClientsPanel extends JPanel {
                 BorderFactory.createEmptyBorder(14, 18, 14, 18)
         ));
 
-        JLabel cardTitle = new JLabel("Client List");
+        JLabel cardTitle = new JLabel("All Loan Requests");
         cardTitle.setForeground(TEXT_DARK);
         cardTitle.setFont(new Font("SansSerif", Font.BOLD, 13));
 
-        // Badge con total real de clientes
-        int total = registry.getAllClients().size();
-        JLabel badge = new JLabel(total + " clients");
+        int total = registry.getAllLoans().size();
+        JLabel badge = new JLabel(total + " loans");
         badge.setForeground(BG_NAVY);
         badge.setFont(new Font("SansSerif", Font.BOLD, 11));
         badge.setBorder(BorderFactory.createEmptyBorder(3, 10, 3, 10));
@@ -125,67 +130,98 @@ public class ClientsPanel extends JPanel {
         cardHeader.add(badge,     BorderLayout.EAST);
         card.add(cardHeader, BorderLayout.NORTH);
 
-        // Tabla
+        // Columnas de la tabla
         String[] cols = {
-            "ID", "Full Name", "Document",
-            "Monthly Income", "Payment Capacity", "Credit Score", "Loans"
+            "Loan ID", "Client", "Product Type",
+            "Principal", "Rate %", "Term", "Monthly Pay",
+            "Total Cost", "Status"
         };
 
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
 
-        // ── Herencia: List<Client> viene de Person ────────────
-        // Client extiende Person — getRole(), getSummary() son polimórficos
-        List<Client> clients = registry.getAllClients();
+        // ── Polimorfismo: iteramos List<Loan> ─────────────────
+        // Cada loan tiene un LoanProduct (abstracto)
+        // getType(), getBaseRate() despachan al subtipo correcto
+        for (Loan loan : registry.getAllLoans()) {
 
-        for (Client client : clients) {
+            // Herencia: getName() viene de Person → Client
+            Client client = registry.getClient(loan.getClientId());
+            String clientName = (client != null) ? client.getName() : "Unknown";
 
-            // Herencia: getName(), getId() vienen de Person (clase abstracta)
-            // getCreditScore(), getMaxPaymentCapacity() son de Client
+            // Polimorfismo: getProduct() retorna LoanProduct abstracto
+            // getType() despacha a MortgageLoan, ConsumerLoan, etc.
+            LoanProduct product = loan.getProduct();
+
             model.addRow(new Object[]{
-                client.getId(),
-                client.getName(),
-                client.getDocument(),
-                String.format("$%,.0f", client.getMonthlyIncome()),
-                String.format("$%,.0f", client.getMaxPaymentCapacity()),
-                client.getCreditScore(),
-                client.getLoanIds().size()
+                loan.getId(),
+                clientName,
+                product.getType().replace("_", " "),   // polimórfico
+                String.format("$%,.0f", loan.getPrincipal()),
+                String.format("%.1f%%", loan.getAnnualRate()),
+                loan.getTerms() + " mo",
+                String.format("$%,.0f", loan.getMonthlyPayment()),
+                String.format("$%,.0f", loan.getTotalCost()),
+                loan.getStatus()
             });
         }
 
         JTable table = new JTable(model);
         styleTable(table);
 
-        // Renderer columna Credit Score
-        table.getColumnModel().getColumn(5).setCellRenderer(
+        // Renderer columna Status
+        int statusCol = 8;
+        table.getColumnModel().getColumn(statusCol).setCellRenderer(
             (t, value, isSelected, hasFocus, row, col) -> {
                 JLabel lbl = new JLabel(value.toString());
                 lbl.setOpaque(true);
                 lbl.setHorizontalAlignment(SwingConstants.CENTER);
-                lbl.setFont(new Font("SansSerif", Font.BOLD, 12));
+                lbl.setFont(new Font("SansSerif", Font.BOLD, 11));
                 lbl.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
                 lbl.setBackground(row % 2 == 0 ? BG_WHITE : BG_LIGHT);
 
                 switch (value.toString()) {
-                    case "AAA" -> lbl.setForeground(new Color(21, 128, 61));
-                    case "AA"  -> lbl.setForeground(new Color(22, 101, 52));
-                    case "A"   -> lbl.setForeground(new Color(2,  132, 199));
-                    case "BBB" -> lbl.setForeground(new Color(180, 120, 0));
-                    default    -> lbl.setForeground(RED_ACCENT);
+                    case "APPROVED" -> lbl.setForeground(new Color(21, 128, 61));
+                    case "REJECTED" -> lbl.setForeground(RED_ACCENT);
+                    default         -> lbl.setForeground(TEXT_MUTED);
+                }
+                return lbl;
+            }
+        );
+
+        // Renderer columna Product Type — color según tipo
+        // Polimorfismo visual: cada tipo tiene su propio color
+        int typeCol = 2;
+        table.getColumnModel().getColumn(typeCol).setCellRenderer(
+            (t, value, isSelected, hasFocus, row, col) -> {
+                JLabel lbl = new JLabel(value.toString());
+                lbl.setOpaque(true);
+                lbl.setFont(new Font("SansSerif", Font.BOLD, 11));
+                lbl.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
+                lbl.setBackground(row % 2 == 0 ? BG_WHITE : BG_LIGHT);
+
+                switch (value.toString()) {
+                    case "MORTGAGE"        -> lbl.setForeground(BG_NAVY);
+                    case "EDUCATIONAL"     -> lbl.setForeground(new Color(2, 132, 199));
+                    case "CONSUMER"        -> lbl.setForeground(new Color(180, 120, 0));
+                    case "FREE INVESTMENT" -> lbl.setForeground(new Color(21, 128, 61));
+                    default                -> lbl.setForeground(TEXT_DARK);
                 }
                 return lbl;
             }
         );
 
         // Anchos de columna
-        table.getColumnModel().getColumn(0).setPreferredWidth(70);
-        table.getColumnModel().getColumn(1).setPreferredWidth(180);
-        table.getColumnModel().getColumn(2).setPreferredWidth(110);
-        table.getColumnModel().getColumn(3).setPreferredWidth(140);
-        table.getColumnModel().getColumn(4).setPreferredWidth(140);
-        table.getColumnModel().getColumn(5).setPreferredWidth(100);
-        table.getColumnModel().getColumn(6).setPreferredWidth(60);
+        table.getColumnModel().getColumn(0).setPreferredWidth(80);
+        table.getColumnModel().getColumn(1).setPreferredWidth(150);
+        table.getColumnModel().getColumn(2).setPreferredWidth(130);
+        table.getColumnModel().getColumn(3).setPreferredWidth(120);
+        table.getColumnModel().getColumn(4).setPreferredWidth(60);
+        table.getColumnModel().getColumn(5).setPreferredWidth(60);
+        table.getColumnModel().getColumn(6).setPreferredWidth(110);
+        table.getColumnModel().getColumn(7).setPreferredWidth(110);
+        table.getColumnModel().getColumn(8).setPreferredWidth(90);
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.getViewport().setBackground(BG_WHITE);
@@ -199,7 +235,7 @@ public class ClientsPanel extends JPanel {
         table.setBackground(BG_WHITE);
         table.setForeground(TEXT_DARK);
         table.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        table.setRowHeight(38);
+        table.setRowHeight(36);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
         table.setSelectionBackground(new Color(1, 33, 105, 25));
@@ -221,16 +257,5 @@ public class ClientsPanel extends JPanel {
                 return lbl;
             }
         );
-    }
-
-    // ── Polimorfismo demo: imprime todos como Person ──────────
-    // Aunque son Client, se tratan como Person en el loop
-    private void printPersonSummaries() {
-        List<Client> clients = registry.getAllClients();
-        for (Person p : clients) {
-            // getSummary() y getRole() despachan a Client en runtime
-            System.out.println(p.getHeader());
-            System.out.println(p.getSummary());
-        }
     }
 }

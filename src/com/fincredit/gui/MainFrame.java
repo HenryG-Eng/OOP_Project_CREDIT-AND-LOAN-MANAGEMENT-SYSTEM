@@ -215,10 +215,10 @@ public class MainFrame extends JFrame {
         mainPanel.setBackground(BG_LIGHT);
         //Add cards
         mainPanel.add(new DashboardPanel(),            "dashboard");
-        mainPanel.add(new ClientsPanel(),      "clients");
-        mainPanel.add(makePlaceholder("Loans"),        "loans");
-        mainPanel.add(new NewClientPanel(),   "newClient");
-        mainPanel.add(makePlaceholder("Request Loan"), "newLoan");
+        mainPanel.add(new ClientsPanel(cardLayout, mainPanel),      "clients");
+        mainPanel.add(new NewClientPanel(cardLayout, mainPanel), "newClient");
+        mainPanel.add(new LoansPanel(cardLayout, mainPanel), "loans");
+        mainPanel.add(new NewLoanPanel(cardLayout, mainPanel), "newLoan");
 
         centerPanel.add(mainPanel, BorderLayout.CENTER);
         getContentPane().add(centerPanel, BorderLayout.CENTER);

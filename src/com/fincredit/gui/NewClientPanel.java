@@ -1,5 +1,8 @@
 package com.fincredit.gui;
 
+import com.fincredit.model.Client;
+import com.fincredit.registry.LoanRegistry;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -12,22 +15,35 @@ public class NewClientPanel extends JPanel {
     private static final Color TEXT_DARK  = new Color(30,  30,  30);
     private static final Color TEXT_MUTED = new Color(110, 120, 135);
     private static final Color BORDER     = new Color(220, 223, 228);
+    private static final Color GREEN_OK   = new Color(21, 128, 61);
 
-    // Campos del formulario — variables de instancia
-    // para poder leerlos después cuando conectemos la lógica
+    // Manejo de objetos: instancia del registro
+    private final LoanRegistry registry = LoanRegistry.getInstance();
+
+    // Navegación
+    private final CardLayout cardLayout;
+    private final JPanel mainPanel;
+
+    // Campos del formulario
     private JTextField txtName;
     private JTextField txtDocument;
     private JTextField txtEmail;
     private JTextField txtIncome;
     private JTextField txtExpenses;
 
-    public NewClientPanel() {
+    // Panel de mensajes
+    private JLabel lblMessage;
+
+    public NewClientPanel(CardLayout cardLayout, JPanel mainPanel) {
+        this.cardLayout = cardLayout;
+        this.mainPanel  = mainPanel;
+
         setLayout(new BorderLayout());
         setBackground(BG_LIGHT);
         setBorder(BorderFactory.createEmptyBorder(24, 28, 24, 28));
 
-        add(buildTopBar(),  BorderLayout.NORTH);
-        add(buildForm(),    BorderLayout.CENTER);
+        add(buildTopBar(), BorderLayout.NORTH);
+        add(buildForm(),   BorderLayout.CENTER);
     }
 
     // ── TOP BAR ───────────────────────────────────────────────
@@ -54,20 +70,19 @@ public class NewClientPanel extends JPanel {
         titleBlock.add(lblTitle);
         titleBlock.add(Box.createRigidArea(new Dimension(0, 4)));
         titleBlock.add(lblSub);
-
         bar.add(titleBlock, BorderLayout.WEST);
+
         return bar;
     }
 
     // ── FORM ──────────────────────────────────────────────────
 
     private JPanel buildForm() {
-        // Card exterior
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(BG_WHITE);
         card.setBorder(BorderFactory.createLineBorder(BORDER, 1));
 
-        // Cabecera del card
+        // Cabecera
         JPanel cardHeader = new JPanel(new BorderLayout());
         cardHeader.setBackground(BG_WHITE);
         cardHeader.setBorder(BorderFactory.createCompoundBorder(
@@ -94,52 +109,56 @@ public class NewClientPanel extends JPanel {
         cardHeader.add(headerLeft, BorderLayout.WEST);
         card.add(cardHeader, BorderLayout.NORTH);
 
-        // Cuerpo del formulario
-        JPanel body = new JPanel();
+        // Cuerpo
+        JPanel body = new JPanel(new GridBagLayout());
         body.setBackground(BG_WHITE);
-        body.setLayout(new GridBagLayout());
         body.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill      = GridBagConstraints.HORIZONTAL;
-        gbc.insets    = new Insets(8, 8, 8, 8);
-        gbc.weightx   = 1.0;
+        gbc.fill    = GridBagConstraints.HORIZONTAL;
+        gbc.insets  = new Insets(8, 8, 8, 8);
+        gbc.weightx = 1.0;
 
-        // ── Fila 1: Name + Document ───────────────────────────
+        // Fila 1: Name + Document
         gbc.gridx = 0; gbc.gridy = 0;
         body.add(makeFieldGroup("Full Name *", "e.g. Ana Martínez"), gbc);
 
         gbc.gridx = 1; gbc.gridy = 0;
         body.add(makeFieldGroup("Document (ID) *", "e.g. CC-1234567"), gbc);
 
-        // ── Fila 2: Email (ancho completo) ────────────────────
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.gridwidth = 2;
+        // Fila 2: Email
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 2;
         body.add(makeFieldGroup("Email Address *", "client@email.com"), gbc);
         gbc.gridwidth = 1;
 
-        // ── Fila 3: Income + Expenses ─────────────────────────
+        // Fila 3: Income + Expenses
         gbc.gridx = 0; gbc.gridy = 2;
         body.add(makeFieldGroup("Monthly Income ($) *", "e.g. 5000000"), gbc);
 
         gbc.gridx = 1; gbc.gridy = 2;
         body.add(makeFieldGroup("Monthly Expenses ($) *", "e.g. 1500000"), gbc);
 
-        // ── Fila 4: Info box ──────────────────────────────────
-        gbc.gridx = 0; gbc.gridy = 3;
-        gbc.gridwidth = 2;
+        // Fila 4: Info box
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
         body.add(buildInfoBox(), gbc);
         gbc.gridwidth = 1;
 
-        // ── Fila 5: Botones ───────────────────────────────────
-        gbc.gridx = 0; gbc.gridy = 4;
-        gbc.gridwidth = 2;
+        // Fila 5: Mensaje de error/éxito
+        lblMessage = new JLabel(" ");
+        lblMessage.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblMessage.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
+
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2;
+        body.add(lblMessage, gbc);
+        gbc.gridwidth = 1;
+
+        // Fila 6: Botones
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
         body.add(buildButtonRow(), gbc);
         gbc.gridwidth = 1;
 
         card.add(body, BorderLayout.CENTER);
 
-        // Wrapper para que el form no se estire verticalmente
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setOpaque(false);
         wrapper.add(card, BorderLayout.NORTH);
@@ -160,18 +179,16 @@ public class NewClientPanel extends JPanel {
 
         JTextField field = new JTextField();
         field.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        field.setForeground(TEXT_DARK);
-        field.setBackground(BG_WHITE);
+        field.setForeground(TEXT_MUTED);
+        field.setText(placeholder);
+        field.setAlignmentX(Component.LEFT_ALIGNMENT);
+        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
         field.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER, 1),
                 BorderFactory.createEmptyBorder(8, 12, 8, 12)
         ));
-        field.setAlignmentX(Component.LEFT_ALIGNMENT);
-        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
 
-        // Placeholder simulado con FocusListener
-        field.setForeground(TEXT_MUTED);
-        field.setText(placeholder);
+        // Placeholder con FocusListener
         field.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent e) {
                 if (field.getText().equals(placeholder)) {
@@ -195,12 +212,12 @@ public class NewClientPanel extends JPanel {
             }
         });
 
-        // Guardar referencia según el label
-        if (label.contains("Full Name"))   txtName     = field;
-        if (label.contains("Document"))    txtDocument = field;
-        if (label.contains("Email"))       txtEmail    = field;
-        if (label.contains("Income"))      txtIncome   = field;
-        if (label.contains("Expenses"))    txtExpenses = field;
+        // Asignar referencia al campo correcto
+        if (label.contains("Full Name"))  txtName     = field;
+        if (label.contains("Document"))   txtDocument = field;
+        if (label.contains("Email"))      txtEmail    = field;
+        if (label.contains("Income"))     txtIncome   = field;
+        if (label.contains("Expenses"))   txtExpenses = field;
 
         group.add(lbl);
         group.add(Box.createRigidArea(new Dimension(0, 6)));
@@ -219,13 +236,13 @@ public class NewClientPanel extends JPanel {
                 BorderFactory.createEmptyBorder(12, 16, 12, 16)
         ));
 
-        JLabel title = new JLabel("ℹ  Credit Evaluation Rule");
+        JLabel title = new JLabel("Credit Evaluation Rule");
         title.setForeground(BG_NAVY);
         title.setFont(new Font("SansSerif", Font.BOLD, 12));
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel info = new JLabel(
-            "A loan will be approved only if the monthly payment does not exceed 30% of the client's income."
+            "A loan will be approved only if the monthly payment does not exceed 30% of income."
         );
         info.setForeground(TEXT_DARK);
         info.setFont(new Font("SansSerif", Font.PLAIN, 12));
@@ -243,7 +260,6 @@ public class NewClientPanel extends JPanel {
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         row.setOpaque(false);
 
-        // Botón guardar
         JButton btnSave = new JButton("Register Client");
         btnSave.setBackground(BG_NAVY);
         btnSave.setForeground(Color.WHITE);
@@ -252,6 +268,9 @@ public class NewClientPanel extends JPanel {
         btnSave.setFocusPainted(false);
         btnSave.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btnSave.setBorder(BorderFactory.createEmptyBorder(10, 24, 10, 24));
+
+        // ── Manejo de errores: lógica en actionListener ───────
+        btnSave.addActionListener(e -> registerClient());
 
         btnSave.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent e) {
@@ -262,7 +281,6 @@ public class NewClientPanel extends JPanel {
             }
         });
 
-        // Botón cancelar
         JButton btnCancel = new JButton("Cancel");
         btnCancel.setBackground(BG_WHITE);
         btnCancel.setForeground(TEXT_MUTED);
@@ -273,18 +291,127 @@ public class NewClientPanel extends JPanel {
         ));
         btnCancel.setFocusPainted(false);
         btnCancel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
-        btnCancel.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                btnCancel.setForeground(TEXT_DARK);
-            }
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                btnCancel.setForeground(TEXT_MUTED);
-            }
+        btnCancel.addActionListener(e -> {
+            clearForm();
+            cardLayout.show(mainPanel, "clients");
         });
 
         row.add(btnSave);
         row.add(btnCancel);
         return row;
+    }
+
+    // ── LÓGICA PRINCIPAL ──────────────────────────────────────
+
+    private void registerClient() {
+        try {
+            // Manejo de errores: validamos campos vacíos
+            String name     = getFieldValue(txtName,     "e.g. Ana Martínez");
+            String document = getFieldValue(txtDocument, "e.g. CC-1234567");
+            String email    = getFieldValue(txtEmail,    "client@email.com");
+            String incomeStr   = getFieldValue(txtIncome,   "e.g. 5000000");
+            String expensesStr = getFieldValue(txtExpenses, "e.g. 1500000");
+
+            // Validación de campos vacíos
+            if (name.isEmpty() || document.isEmpty() ||
+                email.isEmpty() || incomeStr.isEmpty() || expensesStr.isEmpty()) {
+                showError("All fields are required.");
+                return;
+            }
+
+            // Validación de email
+            if (!email.contains("@") || !email.contains(".")) {
+                showError("Please enter a valid email address.");
+                return;
+            }
+
+            // Manejo de errores: parseamos números con try/catch
+            double income;
+            double expenses;
+
+            try {
+                income   = Double.parseDouble(incomeStr.replace(",", ""));
+                expenses = Double.parseDouble(expensesStr.replace(",", ""));
+            } catch (NumberFormatException ex) {
+                // Manejo de errores: capturamos número inválido
+                showError("Income and expenses must be valid numbers.");
+                return;
+            }
+
+            // Validaciones de negocio
+            if (income <= 0) {
+                showError("Monthly income must be greater than zero.");
+                return;
+            }
+
+            if (expenses < 0) {
+                showError("Monthly expenses cannot be negative.");
+                return;
+            }
+
+            if (expenses >= income) {
+                showError("Monthly expenses must be less than monthly income.");
+                return;
+            }
+
+            // ── Manejo de objetos: creamos el Client vía registry ─
+            // registerClient() internamente crea un objeto Client (herencia de Person)
+            Client newClient = registry.registerClient(
+                name, document, email, income, expenses
+            );
+
+            // Éxito
+            showSuccess("Client " + newClient.getId() +
+                        " — " + newClient.getName() + " registered successfully!");
+
+            // Limpiamos el formulario y navegamos a clients
+            clearForm();
+            Timer timer = new Timer(1500, ev -> cardLayout.show(mainPanel, "clients"));
+            timer.setRepeats(false);
+            timer.start();
+
+        } catch (Exception ex) {
+            // Manejo de errores: capturamos cualquier error inesperado
+            showError("Unexpected error: " + ex.getMessage());
+        }
+    }
+
+    // ── HELPERS ───────────────────────────────────────────────
+
+    /**
+     * Retorna el valor del campo ignorando el placeholder.
+     * Si el campo tiene el texto del placeholder, retorna vacío.
+     */
+    private String getFieldValue(JTextField field, String placeholder) {
+        String value = field.getText().trim();
+        return value.equals(placeholder) ? "" : value;
+    }
+
+    private void showError(String message) {
+        lblMessage.setForeground(RED_ACCENT);
+        lblMessage.setText("✖  " + message);
+    }
+
+    private void showSuccess(String message) {
+        lblMessage.setForeground(GREEN_OK);
+        lblMessage.setText("✔  " + message);
+    }
+
+    private void clearForm() {
+        resetField(txtName,     "e.g. Ana Martínez");
+        resetField(txtDocument, "e.g. CC-1234567");
+        resetField(txtEmail,    "client@email.com");
+        resetField(txtIncome,   "e.g. 5000000");
+        resetField(txtExpenses, "e.g. 1500000");
+        lblMessage.setText(" ");
+    }
+
+    private void resetField(JTextField field, String placeholder) {
+        field.setText(placeholder);
+        field.setForeground(TEXT_MUTED);
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER, 1),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
     }
 }
