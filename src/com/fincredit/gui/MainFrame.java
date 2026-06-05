@@ -1,3 +1,7 @@
+/** the application purpose is to help users understand the financial implications of taking out a loan and to assist them in making informed decisions about their borrowing options.
+ * @author:Henry Garrido - Cristian Castro
+ * @date: 29-05-2026
+ */
 package com.fincredit.gui;
 
 import javax.swing.*;
@@ -26,6 +30,9 @@ public class MainFrame extends JFrame {
     private static final Color TEXT_DARK    = new Color(30,  30,  30);
     private static final Color TEXT_MUTED   = new Color(110, 120, 135);
     private static final Color BORDER_LIGHT = new Color(220, 223, 228);
+    
+    private ClientsPanel clientsPanel;
+    private LoansPanel loansPanel;
 
     public MainFrame() {
         ImageIcon icon = new ImageIcon(getClass().getResource("/Images/Logoprot.png"));
@@ -213,20 +220,31 @@ public class MainFrame extends JFrame {
         cardLayout = new CardLayout();
         mainPanel  = new JPanel(cardLayout);
         mainPanel.setBackground(BG_LIGHT);
-        //Add cards
-        mainPanel.add(new DashboardPanel(),            "dashboard");
-        mainPanel.add(new ClientsPanel(cardLayout, mainPanel),      "clients");
+        //Instance 
+        clientsPanel = new ClientsPanel(cardLayout, mainPanel);
+        loansPanel   = new LoansPanel(cardLayout, mainPanel);
+        // Add panels to CardLayout
+        mainPanel.add(new DashboardPanel(),                  "dashboard");
+        mainPanel.add(clientsPanel,                          "clients");
         mainPanel.add(new NewClientPanel(cardLayout, mainPanel), "newClient");
-        mainPanel.add(new LoansPanel(cardLayout, mainPanel), "loans");
-        mainPanel.add(new NewLoanPanel(cardLayout, mainPanel), "newLoan");
-
+        mainPanel.add(loansPanel,                            "loans");
+        mainPanel.add(new NewLoanPanel(cardLayout, mainPanel),   "newLoan");
         centerPanel.add(mainPanel, BorderLayout.CENTER);
         getContentPane().add(centerPanel, BorderLayout.CENTER);
 
         //ActionListeners
         btnDashboard.addActionListener(e -> cardLayout.show(mainPanel, "dashboard"));
-        btnClients.addActionListener(e ->   cardLayout.show(mainPanel, "clients"));
-        btnLoans.addActionListener(e ->     cardLayout.show(mainPanel, "loans"));
+
+        btnClients.addActionListener(e -> {
+            clientsPanel.refresh();
+            cardLayout.show(mainPanel, "clients");
+        });
+
+        btnLoans.addActionListener(e -> {
+            loansPanel.refresh();
+            cardLayout.show(mainPanel, "loans");
+        });
+
         btnNewClient.addActionListener(e -> cardLayout.show(mainPanel, "newClient"));
         btnNewLoan.addActionListener(e ->   cardLayout.show(mainPanel, "newLoan"));
     }

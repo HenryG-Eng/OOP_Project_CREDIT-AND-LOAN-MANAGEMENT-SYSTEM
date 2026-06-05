@@ -17,21 +17,17 @@ public class NewClientPanel extends JPanel {
     private static final Color BORDER     = new Color(220, 223, 228);
     private static final Color GREEN_OK   = new Color(21, 128, 61);
 
-    // Manejo de objetos: instancia del registro
     private final LoanRegistry registry = LoanRegistry.getInstance();
 
-    // Navegación
     private final CardLayout cardLayout;
     private final JPanel mainPanel;
 
-    // Campos del formulario
     private JTextField txtName;
     private JTextField txtDocument;
     private JTextField txtEmail;
     private JTextField txtIncome;
     private JTextField txtExpenses;
 
-    // Panel de mensajes
     private JLabel lblMessage;
 
     public NewClientPanel(CardLayout cardLayout, JPanel mainPanel) {
@@ -82,7 +78,6 @@ public class NewClientPanel extends JPanel {
         card.setBackground(BG_WHITE);
         card.setBorder(BorderFactory.createLineBorder(BORDER, 1));
 
-        // Cabecera
         JPanel cardHeader = new JPanel(new BorderLayout());
         cardHeader.setBackground(BG_WHITE);
         cardHeader.setBorder(BorderFactory.createCompoundBorder(
@@ -109,7 +104,6 @@ public class NewClientPanel extends JPanel {
         cardHeader.add(headerLeft, BorderLayout.WEST);
         card.add(cardHeader, BorderLayout.NORTH);
 
-        // Cuerpo
         JPanel body = new JPanel(new GridBagLayout());
         body.setBackground(BG_WHITE);
         body.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
@@ -119,31 +113,26 @@ public class NewClientPanel extends JPanel {
         gbc.insets  = new Insets(8, 8, 8, 8);
         gbc.weightx = 1.0;
 
-        // Fila 1: Name + Document
         gbc.gridx = 0; gbc.gridy = 0;
         body.add(makeFieldGroup("Full Name *", "e.g. Ana Martínez"), gbc);
 
         gbc.gridx = 1; gbc.gridy = 0;
         body.add(makeFieldGroup("Document (ID) *", "e.g. CC-1234567"), gbc);
 
-        // Fila 2: Email
         gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 2;
         body.add(makeFieldGroup("Email Address *", "client@email.com"), gbc);
         gbc.gridwidth = 1;
 
-        // Fila 3: Income + Expenses
         gbc.gridx = 0; gbc.gridy = 2;
         body.add(makeFieldGroup("Monthly Income ($) *", "e.g. 5000000"), gbc);
 
         gbc.gridx = 1; gbc.gridy = 2;
         body.add(makeFieldGroup("Monthly Expenses ($) *", "e.g. 1500000"), gbc);
 
-        // Fila 4: Info box
         gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
         body.add(buildInfoBox(), gbc);
         gbc.gridwidth = 1;
 
-        // Fila 5: Mensaje de error/éxito
         lblMessage = new JLabel(" ");
         lblMessage.setFont(new Font("SansSerif", Font.BOLD, 12));
         lblMessage.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
@@ -152,7 +141,6 @@ public class NewClientPanel extends JPanel {
         body.add(lblMessage, gbc);
         gbc.gridwidth = 1;
 
-        // Fila 6: Botones
         gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
         body.add(buildButtonRow(), gbc);
         gbc.gridwidth = 1;
@@ -188,7 +176,6 @@ public class NewClientPanel extends JPanel {
                 BorderFactory.createEmptyBorder(8, 12, 8, 12)
         ));
 
-        // Placeholder con FocusListener
         field.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent e) {
                 if (field.getText().equals(placeholder)) {
@@ -212,7 +199,6 @@ public class NewClientPanel extends JPanel {
             }
         });
 
-        // Asignar referencia al campo correcto
         if (label.contains("Full Name"))  txtName     = field;
         if (label.contains("Document"))   txtDocument = field;
         if (label.contains("Email"))      txtEmail    = field;
@@ -268,17 +254,11 @@ public class NewClientPanel extends JPanel {
         btnSave.setFocusPainted(false);
         btnSave.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btnSave.setBorder(BorderFactory.createEmptyBorder(10, 24, 10, 24));
-
-        // ── Manejo de errores: lógica en actionListener ───────
         btnSave.addActionListener(e -> registerClient());
 
         btnSave.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                btnSave.setBackground(new Color(0, 20, 70));
-            }
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                btnSave.setBackground(BG_NAVY);
-            }
+            public void mouseEntered(java.awt.event.MouseEvent e) { btnSave.setBackground(new Color(0, 20, 70)); }
+            public void mouseExited(java.awt.event.MouseEvent e)  { btnSave.setBackground(BG_NAVY); }
         });
 
         JButton btnCancel = new JButton("Cancel");
@@ -301,87 +281,106 @@ public class NewClientPanel extends JPanel {
         return row;
     }
 
-    // ── LÓGICA PRINCIPAL ──────────────────────────────────────
+    // ── MAIN LOGIC ────────────────────────────────────────────
 
     private void registerClient() {
         try {
-            // Manejo de errores: validamos campos vacíos
             String name     = getFieldValue(txtName,     "e.g. Ana Martínez");
             String document = getFieldValue(txtDocument, "e.g. CC-1234567");
             String email    = getFieldValue(txtEmail,    "client@email.com");
             String incomeStr   = getFieldValue(txtIncome,   "e.g. 5000000");
             String expensesStr = getFieldValue(txtExpenses, "e.g. 1500000");
 
-            // Validación de campos vacíos
+            // ── VALIDATION 1: empty fields ────────────────────
             if (name.isEmpty() || document.isEmpty() ||
                 email.isEmpty() || incomeStr.isEmpty() || expensesStr.isEmpty()) {
                 showError("All fields are required.");
                 return;
             }
 
-            // Validación de email
-            if (!email.contains("@") || !email.contains(".")) {
-                showError("Please enter a valid email address.");
+            // ── VALIDATION 2: name must be alphabetic (letters + spaces + accents) ─
+            // Rejects entries like "123", "Ana123", "###"
+            if (!name.matches("[\\p{L}\\s'\\-\\.]{2,80}")) {
+                showError("Full name must contain only letters (e.g. Ana Martínez). Numbers are not allowed.");
                 return;
             }
 
-            // Manejo de errores: parseamos números con try/catch
+            // ── VALIDATION 3: name must have at least two words ──
+            String[] nameParts = name.trim().split("\\s+");
+            if (nameParts.length < 2) {
+                showError("Please enter both first and last name (e.g. Ana Martínez).");
+                return;
+            }
+
+            // ── VALIDATION 4: document format ────────────────────
+            // Accepts: CC-1234567, TI-9876543, CE-123456, PP-AB123456
+            if (!document.matches("(?i)(CC|TI|CE|PP|NIT)-[A-Z0-9]{4,15}")) {
+                showError("Document must follow the format: CC-1234567, TI-9876543, CE-123456, etc.");
+                return;
+            }
+
+            // ── VALIDATION 5: email format ────────────────────────
+            if (!email.matches("^[\\w._%+\\-]+@[\\w.\\-]+\\.[a-zA-Z]{2,}$")) {
+                showError("Please enter a valid email address (e.g. user@domain.com).");
+                return;
+            }
+
+            // ── VALIDATION 6: numeric fields ──────────────────────
             double income;
             double expenses;
-
             try {
-                income   = Double.parseDouble(incomeStr.replace(",", ""));
-                expenses = Double.parseDouble(expensesStr.replace(",", ""));
+                income   = Double.parseDouble(incomeStr.replace(",", "").replace(".", "").replace(" ", ""));
+                expenses = Double.parseDouble(expensesStr.replace(",", "").replace(".", "").replace(" ", ""));
             } catch (NumberFormatException ex) {
-                // Manejo de errores: capturamos número inválido
-                showError("Income and expenses must be valid numbers.");
+                showError("Income and expenses must be valid positive numbers (e.g. 5000000).");
                 return;
             }
 
-            // Validaciones de negocio
+            // ── VALIDATION 7: income must be positive ─────────────
             if (income <= 0) {
                 showError("Monthly income must be greater than zero.");
                 return;
             }
 
+
+            // ── VALIDATION 9: expenses cannot be negative ─────────
             if (expenses < 0) {
                 showError("Monthly expenses cannot be negative.");
                 return;
             }
 
+            // ── VALIDATION 10: expenses must be less than income ──
             if (expenses >= income) {
                 showError("Monthly expenses must be less than monthly income.");
                 return;
             }
 
-            // ── Manejo de objetos: creamos el Client vía registry ─
-            // registerClient() internamente crea un objeto Client (herencia de Person)
-            Client newClient = registry.registerClient(
-                name, document, email, income, expenses
-            );
+            // ── VALIDATION 11: minimum net income ─────────────────
+            double netIncome = income - expenses;
+            if (netIncome < 100_000) {
+                showError("Net income (income − expenses) is too low to be eligible.");
+                return;
+            }
 
-            // Éxito
+            // Register
+            Client newClient = registry.registerClient(name.trim(), document.toUpperCase(),
+                                                        email.toLowerCase(), income, expenses);
+
             showSuccess("Client " + newClient.getId() +
                         " — " + newClient.getName() + " registered successfully!");
 
-            // Limpiamos el formulario y navegamos a clients
             clearForm();
             Timer timer = new Timer(1500, ev -> cardLayout.show(mainPanel, "clients"));
             timer.setRepeats(false);
             timer.start();
 
         } catch (Exception ex) {
-            // Manejo de errores: capturamos cualquier error inesperado
             showError("Unexpected error: " + ex.getMessage());
         }
     }
 
     // ── HELPERS ───────────────────────────────────────────────
 
-    /**
-     * Retorna el valor del campo ignorando el placeholder.
-     * Si el campo tiene el texto del placeholder, retorna vacío.
-     */
     private String getFieldValue(JTextField field, String placeholder) {
         String value = field.getText().trim();
         return value.equals(placeholder) ? "" : value;

@@ -19,12 +19,12 @@ public class ClientsPanel extends JPanel {
     private static final Color TEXT_MUTED = new Color(110, 120, 135);
     private static final Color BORDER     = new Color(220, 223, 228);
 
-    // Manejo de objetos: instancia única del registro
     private final LoanRegistry registry = LoanRegistry.getInstance();
 
-    // Referencia al CardLayout del MainFrame para navegar
     private final CardLayout cardLayout;
     private final JPanel mainPanel;
+
+    private JPanel tableContainer;
 
     public ClientsPanel(CardLayout cardLayout, JPanel mainPanel) {
         this.cardLayout = cardLayout;
@@ -54,7 +54,6 @@ public class ClientsPanel extends JPanel {
         lblTitle.setFont(new Font("SansSerif", Font.BOLD, 18));
         lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Herencia: getRole() llamado en Person retorna "CLIENT"
         JLabel lblSub = new JLabel(
             registry.getAllClients().size() + " clients registered · Role: CLIENT"
         );
@@ -67,7 +66,6 @@ public class ClientsPanel extends JPanel {
         titleBlock.add(lblSub);
         bar.add(titleBlock, BorderLayout.WEST);
 
-        // Botón navega a NewClientPanel
         JButton btnNew = new JButton("+ New Client");
         btnNew.setBackground(BG_NAVY);
         btnNew.setForeground(Color.WHITE);
@@ -79,12 +77,8 @@ public class ClientsPanel extends JPanel {
         btnNew.addActionListener(e -> cardLayout.show(mainPanel, "newClient"));
 
         btnNew.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                btnNew.setBackground(new Color(0, 20, 70));
-            }
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                btnNew.setBackground(BG_NAVY);
-            }
+            public void mouseEntered(java.awt.event.MouseEvent e) { btnNew.setBackground(new Color(0, 20, 70)); }
+            public void mouseExited(java.awt.event.MouseEvent e)  { btnNew.setBackground(BG_NAVY); }
         });
 
         JPanel btnPanel = new JPanel(new GridBagLayout());
@@ -98,11 +92,17 @@ public class ClientsPanel extends JPanel {
     // ── TABLE ─────────────────────────────────────────────────
 
     private JPanel buildTable() {
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(BG_WHITE);
-        card.setBorder(BorderFactory.createLineBorder(BORDER, 1));
+        tableContainer = new JPanel(new BorderLayout());
+        tableContainer.setBackground(BG_WHITE);
+        tableContainer.setBorder(BorderFactory.createLineBorder(BORDER, 1));
+        fillTable(tableContainer);
+        return tableContainer;
+    }
 
-        // Cabecera del card
+    private void fillTable(JPanel card) {
+        card.removeAll();
+
+        // Header
         JPanel cardHeader = new JPanel(new BorderLayout());
         cardHeader.setBackground(BG_WHITE);
         cardHeader.setBorder(BorderFactory.createCompoundBorder(
@@ -114,7 +114,6 @@ public class ClientsPanel extends JPanel {
         cardTitle.setForeground(TEXT_DARK);
         cardTitle.setFont(new Font("SansSerif", Font.BOLD, 13));
 
-        // Badge con total real de clientes
         int total = registry.getAllClients().size();
         JLabel badge = new JLabel(total + " clients");
         badge.setForeground(BG_NAVY);
@@ -125,24 +124,18 @@ public class ClientsPanel extends JPanel {
         cardHeader.add(badge,     BorderLayout.EAST);
         card.add(cardHeader, BorderLayout.NORTH);
 
-        // Tabla
+        // Table columns — added "Actions" at the end
         String[] cols = {
             "ID", "Full Name", "Document",
-            "Monthly Income", "Payment Capacity", "Credit Score", "Loans"
+            "Monthly Income", "Payment Capacity", "Credit Score", "Loans", "Actions"
         };
 
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
 
-        // ── Herencia: List<Client> viene de Person ────────────
-        // Client extiende Person — getRole(), getSummary() son polimórficos
-        List<Client> clients = registry.getAllClients();
-
-        for (Client client : clients) {
-
-            // Herencia: getName(), getId() vienen de Person (clase abstracta)
-            // getCreditScore(), getMaxPaymentCapacity() son de Client
+        List<Client> clientList = registry.getAllClients();
+        for (Client client : clientList) {
             model.addRow(new Object[]{
                 client.getId(),
                 client.getName(),
@@ -150,14 +143,15 @@ public class ClientsPanel extends JPanel {
                 String.format("$%,.0f", client.getMonthlyIncome()),
                 String.format("$%,.0f", client.getMaxPaymentCapacity()),
                 client.getCreditScore(),
-                client.getLoanIds().size()
+                client.getLoanIds().size(),
+                "Delete"
             });
         }
 
         JTable table = new JTable(model);
         styleTable(table);
 
-        // Renderer columna Credit Score
+        // Credit score color renderer (col 5)
         table.getColumnModel().getColumn(5).setCellRenderer(
             (t, value, isSelected, hasFocus, row, col) -> {
                 JLabel lbl = new JLabel(value.toString());
@@ -166,11 +160,10 @@ public class ClientsPanel extends JPanel {
                 lbl.setFont(new Font("SansSerif", Font.BOLD, 12));
                 lbl.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
                 lbl.setBackground(row % 2 == 0 ? BG_WHITE : BG_LIGHT);
-
                 switch (value.toString()) {
                     case "AAA" -> lbl.setForeground(new Color(21, 128, 61));
                     case "AA"  -> lbl.setForeground(new Color(22, 101, 52));
-                    case "A"   -> lbl.setForeground(new Color(2,  132, 199));
+                    case "A"   -> lbl.setForeground(new Color(2, 132, 199));
                     case "BBB" -> lbl.setForeground(new Color(180, 120, 0));
                     default    -> lbl.setForeground(RED_ACCENT);
                 }
@@ -178,28 +171,79 @@ public class ClientsPanel extends JPanel {
             }
         );
 
-        // Anchos de columna
+        // Delete button renderer (col 7)
+        table.getColumnModel().getColumn(7).setCellRenderer(
+            (t, value, isSelected, hasFocus, row, col) -> {
+                JButton btn = new JButton("🗑 Delete");
+                btn.setFont(new Font("SansSerif", Font.BOLD, 11));
+                btn.setForeground(Color.WHITE);
+                btn.setBackground(RED_ACCENT);
+                btn.setBorderPainted(false);
+                btn.setFocusPainted(false);
+                btn.setOpaque(true);
+                return btn;
+            }
+        );
+
+        // Delete button click via MouseListener
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                int row = table.rowAtPoint(e.getPoint());
+                int col = table.columnAtPoint(e.getPoint());
+                if (col == 7 && row >= 0) {
+                    String clientId   = model.getValueAt(row, 0).toString();
+                    String clientName = model.getValueAt(row, 1).toString();
+                    int loanCount     = (int) model.getValueAt(row, 6);
+
+                    // Confirmation dialog
+                    String message = "<html>Are you sure you want to delete client <b>" +
+                                     clientName + "</b> (" + clientId + ")?";
+                    if (loanCount > 0) {
+                        message += "<br><font color='red'>This will also delete " +
+                                   loanCount + " associated loan(s).</font>";
+                    }
+                    message += "</html>";
+
+                    int confirm = JOptionPane.showConfirmDialog(
+                        ClientsPanel.this,
+                        message,
+                        "Confirm Deletion",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE
+                    );
+
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        registry.deleteClient(clientId);
+                        fillTable(tableContainer); // refresh
+                    }
+                }
+            }
+        });
+
+        // Column widths
         table.getColumnModel().getColumn(0).setPreferredWidth(70);
-        table.getColumnModel().getColumn(1).setPreferredWidth(180);
+        table.getColumnModel().getColumn(1).setPreferredWidth(160);
         table.getColumnModel().getColumn(2).setPreferredWidth(110);
-        table.getColumnModel().getColumn(3).setPreferredWidth(140);
-        table.getColumnModel().getColumn(4).setPreferredWidth(140);
-        table.getColumnModel().getColumn(5).setPreferredWidth(100);
-        table.getColumnModel().getColumn(6).setPreferredWidth(60);
+        table.getColumnModel().getColumn(3).setPreferredWidth(130);
+        table.getColumnModel().getColumn(4).setPreferredWidth(130);
+        table.getColumnModel().getColumn(5).setPreferredWidth(90);
+        table.getColumnModel().getColumn(6).setPreferredWidth(55);
+        table.getColumnModel().getColumn(7).setPreferredWidth(90);
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.getViewport().setBackground(BG_WHITE);
         scroll.setBorder(BorderFactory.createEmptyBorder());
         card.add(scroll, BorderLayout.CENTER);
 
-        return card;
+        card.revalidate();
+        card.repaint();
     }
 
     private void styleTable(JTable table) {
         table.setBackground(BG_WHITE);
         table.setForeground(TEXT_DARK);
         table.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        table.setRowHeight(38);
+        table.setRowHeight(40);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
         table.setSelectionBackground(new Color(1, 33, 105, 25));
@@ -209,7 +253,6 @@ public class ClientsPanel extends JPanel {
         table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 11));
         table.getTableHeader().setPreferredSize(new Dimension(0, 36));
 
-        // Renderer filas alternas
         table.setDefaultRenderer(Object.class,
             (t, value, isSelected, hasFocus, row, col) -> {
                 JLabel lbl = new JLabel(value != null ? value.toString() : "");
@@ -223,12 +266,13 @@ public class ClientsPanel extends JPanel {
         );
     }
 
-    // ── Polimorfismo demo: imprime todos como Person ──────────
-    // Aunque son Client, se tratan como Person en el loop
+    public void refresh() {
+        fillTable(tableContainer);
+    }
+
     private void printPersonSummaries() {
         List<Client> clients = registry.getAllClients();
         for (Person p : clients) {
-            // getSummary() y getRole() despachan a Client en runtime
             System.out.println(p.getHeader());
             System.out.println(p.getSummary());
         }

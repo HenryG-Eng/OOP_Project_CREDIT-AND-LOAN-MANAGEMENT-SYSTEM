@@ -19,6 +19,8 @@ public class LoansPanel extends JPanel {
     private static final Color TEXT_DARK  = new Color(30,  30,  30);
     private static final Color TEXT_MUTED = new Color(110, 120, 135);
     private static final Color BORDER     = new Color(220, 223, 228);
+    
+    private JPanel tableContainer;
 
     // Manejo de objetos: instancia única del registro
     private final LoanRegistry registry = LoanRegistry.getInstance();
@@ -102,13 +104,18 @@ public class LoansPanel extends JPanel {
     }
 
     // ── TABLE ─────────────────────────────────────────────────
-
+    
     private JPanel buildTable() {
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(BG_WHITE);
-        card.setBorder(BorderFactory.createLineBorder(BORDER, 1));
+        tableContainer = new JPanel(new BorderLayout());
+        tableContainer.setBackground(BG_WHITE);
+        tableContainer.setBorder(BorderFactory.createLineBorder(BORDER, 1));
+        fillTable(tableContainer);
+        return tableContainer;
+    }
 
-        // Cabecera del card
+    public void fillTable(JPanel card) {
+    	card.removeAll();
+    	
         JPanel cardHeader = new JPanel(new BorderLayout());
         cardHeader.setBackground(BG_WHITE);
         cardHeader.setBorder(BorderFactory.createCompoundBorder(
@@ -130,7 +137,6 @@ public class LoansPanel extends JPanel {
         cardHeader.add(badge,     BorderLayout.EAST);
         card.add(cardHeader, BorderLayout.NORTH);
 
-        // Columnas de la tabla
         String[] cols = {
             "Loan ID", "Client", "Product Type",
             "Principal", "Rate %", "Term", "Monthly Pay",
@@ -141,17 +147,12 @@ public class LoansPanel extends JPanel {
             public boolean isCellEditable(int r, int c) { return false; }
         };
 
-        // ── Polimorfismo: iteramos List<Loan> ─────────────────
-        // Cada loan tiene un LoanProduct (abstracto)
-        // getType(), getBaseRate() despachan al subtipo correcto
         for (Loan loan : registry.getAllLoans()) {
 
-            // Herencia: getName() viene de Person → Client
+            
             Client client = registry.getClient(loan.getClientId());
             String clientName = (client != null) ? client.getName() : "Unknown";
 
-            // Polimorfismo: getProduct() retorna LoanProduct abstracto
-            // getType() despacha a MortgageLoan, ConsumerLoan, etc.
             LoanProduct product = loan.getProduct();
 
             model.addRow(new Object[]{
@@ -170,7 +171,6 @@ public class LoansPanel extends JPanel {
         JTable table = new JTable(model);
         styleTable(table);
 
-        // Renderer columna Status
         int statusCol = 8;
         table.getColumnModel().getColumn(statusCol).setCellRenderer(
             (t, value, isSelected, hasFocus, row, col) -> {
@@ -189,9 +189,6 @@ public class LoansPanel extends JPanel {
                 return lbl;
             }
         );
-
-        // Renderer columna Product Type — color según tipo
-        // Polimorfismo visual: cada tipo tiene su propio color
         int typeCol = 2;
         table.getColumnModel().getColumn(typeCol).setCellRenderer(
             (t, value, isSelected, hasFocus, row, col) -> {
@@ -212,7 +209,6 @@ public class LoansPanel extends JPanel {
             }
         );
 
-        // Anchos de columna
         table.getColumnModel().getColumn(0).setPreferredWidth(80);
         table.getColumnModel().getColumn(1).setPreferredWidth(150);
         table.getColumnModel().getColumn(2).setPreferredWidth(130);
@@ -227,8 +223,13 @@ public class LoansPanel extends JPanel {
         scroll.getViewport().setBackground(BG_WHITE);
         scroll.setBorder(BorderFactory.createEmptyBorder());
         card.add(scroll, BorderLayout.CENTER);
-
-        return card;
+        
+        card.revalidate();
+        card.repaint();
+    }
+    
+    public void refresh() {
+        fillTable(tableContainer);
     }
 
     private void styleTable(JTable table) {
