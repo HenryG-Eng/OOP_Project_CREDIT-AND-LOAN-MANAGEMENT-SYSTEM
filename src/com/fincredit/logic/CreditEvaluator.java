@@ -12,7 +12,7 @@ import com.fincredit.model.EvaluationResult;
 
 public class CreditEvaluator implements IEvaluable {
 
-    private static final double DEFAULT_THRESHOLD = 0.30;
+    private static final double DEFAULT_THRESHOLD = 0.30;// 30% of monthly income as a common credit guideline
     private final double capacityThreshold;
 
     public CreditEvaluator() {
@@ -22,7 +22,9 @@ public class CreditEvaluator implements IEvaluable {
     public CreditEvaluator(double capacityThreshold) {
         this.capacityThreshold = capacityThreshold;
     }
-
+    /**
+     * Evaluates a client's creditworthiness based on their maximum payment capacity and monthly income.
+     */
     @Override
     public EvaluationResult evaluate(Client client, double monthlyPayment) {
         double maxCapacity   = client.getMaxPaymentCapacity();
@@ -42,6 +44,8 @@ public class CreditEvaluator implements IEvaluable {
                 paymentRatio, reason, getEvaluatorName());
     }
 
-    @Override public double getCapacityThreshold() { return capacityThreshold; }
+    @Override public double getCapacityThreshold() { 
+    	return capacityThreshold; 
+    }
     @Override public String getEvaluatorName()     { return "StandardCreditEvaluator"; }
 }

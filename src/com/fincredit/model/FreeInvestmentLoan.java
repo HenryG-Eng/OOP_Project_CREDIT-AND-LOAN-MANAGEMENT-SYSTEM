@@ -5,7 +5,9 @@
  */
 
 package com.fincredit.model;
-
+/**
+ * Class representing a free investment loan product, extending the LoanProduct class and providing specific details such as base interest rate, maximum term, and description for this type of loan.
+ */
 public class FreeInvestmentLoan extends LoanProduct {
     public FreeInvestmentLoan() { super("FREE_INVESTMENT", "💼"); }
 

@@ -21,8 +21,7 @@ public class Client extends Person {
 
     public static final double PAYMENT_CAPACITY_RATIO = 0.30;//30% of income is considered the maximum payment capacity
 
-    public Client(String id, String name, String document, String email,
-                  double monthlyIncome, double monthlyExpenses) {
+    public Client(String id, String name, String document, String email, double monthlyIncome, double monthlyExpenses) {
         super(id, name, document, email);
         this.monthlyIncome   = monthlyIncome;
         this.monthlyExpenses = monthlyExpenses;

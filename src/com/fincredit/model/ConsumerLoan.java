@@ -5,7 +5,9 @@
  */
 
 package com.fincredit.model;
-
+/**
+ * Class representing a consumer loan product, extending the LoanProduct class and providing specific details such as base interest rate, maximum term, and description for general consumer goods financing.
+ */
 public class ConsumerLoan extends LoanProduct {
     public ConsumerLoan() { super("CONSUMER", "🛒"); }
 

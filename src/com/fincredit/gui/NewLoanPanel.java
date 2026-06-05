@@ -1,3 +1,10 @@
+/* PROGRAM: A application that calculates the monthly payment for a loan based on the loan amount, interest rate, and loan term. It also generates an amortization table showing the breakdown of each payment over the life of the loan. 
+ * the application purpose is to help users understand the financial implications of taking out a loan and to assist them in making informed decisions about their borrowing options.
+ * @author:Henry Garrido - Cristian Castro
+ * @date: 29-05-2026
+ */
+
+
 package com.fincredit.gui;
 
 import com.fincredit.logic.LoanProductFactory;
@@ -62,7 +69,10 @@ public class NewLoanPanel extends JPanel {
         add(buildContent(), BorderLayout.CENTER);
     }
 
-    // ── TOP BAR ───────────────────────────────────────────────
+    /**
+     * Builds the top bar with the title and subtitle of the panel
+     * @return a JPanel containing the styled title and subtitle
+     */
 
     private JPanel buildTopBar() {
         JPanel bar = new JPanel(new BorderLayout());
@@ -91,7 +101,10 @@ public class NewLoanPanel extends JPanel {
         return bar;
     }
 
-    // ── CONTENT: form + preview ────────────────────────────────
+    /**
+     * Builds the main content area with the form on the left and the live preview on the right
+     * @return
+     */
 
     private JPanel buildContent() {
         JPanel content = new JPanel(new GridLayout(1, 2, 16, 0));
@@ -101,7 +114,10 @@ public class NewLoanPanel extends JPanel {
         return content;
     }
 
-    // ── FORM ──────────────────────────────────────────────────
+    /**
+     * Builds the loan request form with all input fields, labels, and buttons. The form includes:
+     * @return a JPanel containing the styled form components and layout
+     */
 
     private JPanel buildForm() {
         JPanel card = new JPanel(new BorderLayout());
@@ -216,7 +232,10 @@ public class NewLoanPanel extends JPanel {
         return card;
     }
 
-    // ── LIVE PREVIEW ──────────────────────────────────────────
+    /**
+     * Builds the live preview panel that updates in real-time as the user fills out the form. The preview shows:
+     * @return a JPanel containing the styled preview components and layout
+     */
 
     private JPanel buildPreview() {
         JPanel card = new JPanel(new BorderLayout());
@@ -259,7 +278,8 @@ public class NewLoanPanel extends JPanel {
         lblTotalInterest = makePreviewValue("—");
         lblCapacity      = makePreviewValue("—");
         lblEvaluation    = makePreviewValue("Fill the form to see the result");
-
+        
+        // Add preview rows with labels and values
         previewPanel.add(makePreviewRow("Monthly Payment",        lblPayment,      BG_NAVY));
         previewPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         previewPanel.add(makePreviewRow("Total Cost",             lblTotalCost,    TEXT_DARK));
@@ -298,13 +318,15 @@ public class NewLoanPanel extends JPanel {
         return card;
     }
 
-    // ── UPDATE PREVIEW ────────────────────────────────────────
+    /**
+     * Helper to create a styled preview row with a label and a value
+     */
 
     private void updatePreview() {
         try {
             String principalStr = getFieldValue(txtPrincipal, "e.g. 50000000");
             String termsStr     = getFieldValue(txtTerms,     "e.g. 36");
-
+            // If any required field is missing or invalid, reset the preview and exit
             if (cmbClient.getSelectedIndex() == 0 ||
                 cmbProduct.getSelectedIndex() == 0 ||
                 principalStr.isEmpty() || termsStr.isEmpty()) {
@@ -316,9 +338,10 @@ public class NewLoanPanel extends JPanel {
             int terms        = Integer.parseInt(termsStr.replace(",", ""));
 
             int productIndex    = cmbProduct.getSelectedIndex() - 1;
-            LoanProduct product = productFactory.getAllProducts().get(productIndex);
+            LoanProduct product = productFactory.getAllProducts().get(productIndex);// Get selected product
 
             String rateStr = getFieldValue(txtCustomRate, "Leave empty to use default rate");
+            //get the values from the form and calculate the payment, total cost, total interest, and client capacity. Then update the preview labels with the calculated values and show the amortization button if the data is valid.
             double rate    = rateStr.isEmpty() ? product.getBaseRate()
                                                : Double.parseDouble(rateStr);
 
@@ -335,13 +358,13 @@ public class NewLoanPanel extends JPanel {
             lblTotalCost.setText(String.format("$%,.0f", totalCost));
             lblTotalInterest.setText(String.format("$%,.0f", totalInterest));
             lblCapacity.setText(String.format("$%,.0f", capacity));
-
+            // Update evaluation message based on affordability
             if (canAfford) {
                 lblEvaluation.setForeground(GREEN_OK);
-                lblEvaluation.setText("✔  Pre-approved — Payment is within 30% capacity");
+                lblEvaluation.setText("Pre-approved — Payment is within 30% capacity");
             } else {
                 lblEvaluation.setForeground(RED_ACCENT);
-                lblEvaluation.setText("✖  Pre-rejected — Payment exceeds 30% of income");
+                lblEvaluation.setText("Pre-rejected — Payment exceeds 30% of income");
             }
 
             // Show amortization button when data is valid
@@ -387,8 +410,7 @@ public class NewLoanPanel extends JPanel {
             List<AmortizationRow> table = product.generateAmortizationTable(principal, rate, terms);
 
             // Dialog
-            JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
-                                         "Amortization Table", true);
+            JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Amortization Table", true);
             dialog.setLayout(new BorderLayout());
             dialog.setSize(900, 560);
             dialog.setLocationRelativeTo(this);
@@ -439,7 +461,7 @@ public class NewLoanPanel extends JPanel {
 
             dialog.add(header, BorderLayout.NORTH);
 
-            // ── Table ─────────────────────────────────────────
+            //build table model
             String[] cols = {
                 "Period", "Opening Balance", "Interest (Iₖ)",
                 "Capital Payment (aₖ)", "Quota (Aₖ)", "Closing Balance (Sₖ)"
@@ -554,7 +576,13 @@ public class NewLoanPanel extends JPanel {
                 "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-
+    /**
+     * Helper to create a styled badge component for the preview panel
+     * @param label
+     * @param value
+     * @param bg
+     * @return a JPanel styled as a badge with the given label, value, and background color
+     */
     private JPanel makeBadge(String label, String value, Color bg) {
         JPanel badge = new JPanel();
         badge.setLayout(new BoxLayout(badge, BoxLayout.Y_AXIS));

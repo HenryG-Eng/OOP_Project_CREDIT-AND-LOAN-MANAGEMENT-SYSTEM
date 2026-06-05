@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class ClientFileManager {
 
-    // Ruta del archivo relativa al proyecto
+    //data folder and file path
     private static final String FILE_PATH = "data/clients.txt";
     private static final String SEPARATOR = ",";
 
@@ -60,8 +60,8 @@ public class ClientFileManager {
      * @return List of clients loaded from the file
      */
     public static List<Client> loadClients() {
-        List<Client> clients = new ArrayList<>();
-        File file = new File(FILE_PATH);
+        List<Client> clients = new ArrayList<>();//
+        File file = new File(FILE_PATH);//check if the file exists before attempting to read
 
    
         if (!file.exists()) {
@@ -83,6 +83,7 @@ public class ClientFileManager {
                         System.err.println("Skipping malformed line: " + line);
                         continue;
                     }
+                    // Parse client data from the line, trimming whitespace and converting numeric values
 
                     String id       = parts[0].trim();
                     String name     = parts[1].trim();

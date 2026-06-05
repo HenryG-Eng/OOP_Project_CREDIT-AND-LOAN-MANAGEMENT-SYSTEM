@@ -30,10 +30,12 @@ public class MainFrame extends JFrame {
     private static final Color TEXT_DARK    = new Color(30,  30,  30);
     private static final Color TEXT_MUTED   = new Color(110, 120, 135);
     private static final Color BORDER_LIGHT = new Color(220, 223, 228);
-    
+    // Panels for dynamic content
     private ClientsPanel clientsPanel;
     private LoansPanel loansPanel;
-
+    /**
+     * Constructor to set up the main frame and its components
+     */
     public MainFrame() {
         ImageIcon icon = new ImageIcon(getClass().getResource("/Images/Logoprot.png"));
         this.setIconImage(icon.getImage());
@@ -50,7 +52,9 @@ public class MainFrame extends JFrame {
 
         setVisible(true);
     }
-
+    /**
+     * Builds the sidebar panel with branding, navigation buttons, and footer information
+     */
     private void buildSidebar() {
         sidebarPanel = new JPanel();
         sidebarPanel.setPreferredSize(new Dimension(210, 0));
@@ -141,7 +145,12 @@ public class MainFrame extends JFrame {
 
         getContentPane().add(sidebarPanel, BorderLayout.WEST);
     }
-
+    /**
+     * Helper method to create styled navigation buttons with hover effects
+     * @param text
+     * @param icon
+     * @return
+     */
     private JButton makeNavButton(String text, String icon) {
         JButton btn = new JButton(icon + "   " + text);
         btn.setForeground(new Color(200, 210, 230));
@@ -248,7 +257,12 @@ public class MainFrame extends JFrame {
         btnNewClient.addActionListener(e -> cardLayout.show(mainPanel, "newClient"));
         btnNewLoan.addActionListener(e ->   cardLayout.show(mainPanel, "newLoan"));
     }
-
+    
+    /**
+     * Helper method to create placeholder panels with centered text for sections that are not yet implemented
+     * @param text
+     * @return
+     */
     private JPanel makePlaceholder(String text) {
         JPanel p = new JPanel(new GridBagLayout());
         p.setBackground(BG_LIGHT);

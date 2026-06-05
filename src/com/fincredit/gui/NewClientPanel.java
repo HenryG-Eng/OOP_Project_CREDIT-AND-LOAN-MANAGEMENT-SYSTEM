@@ -1,3 +1,10 @@
+/* PROGRAM: A application that calculates the monthly payment for a loan based on the loan amount, interest rate, and loan term. It also generates an amortization table showing the breakdown of each payment over the life of the loan. 
+ * the application purpose is to help users understand the financial implications of taking out a loan and to assist them in making informed decisions about their borrowing options.
+ * @author:Henry Garrido - Cristian Castro
+ * @date: 29-05-2026
+ */
+
+
 package com.fincredit.gui;
 
 import com.fincredit.model.Client;
@@ -42,7 +49,10 @@ public class NewClientPanel extends JPanel {
         add(buildForm(),   BorderLayout.CENTER);
     }
 
-    // ── TOP BAR ───────────────────────────────────────────────
+    /**
+     * Builds the top bar with title and subtitle.
+     * @return JPanel containing the top bar.
+     */
 
     private JPanel buildTopBar() {
         JPanel bar = new JPanel(new BorderLayout());
@@ -71,7 +81,10 @@ public class NewClientPanel extends JPanel {
         return bar;
     }
 
-    // ── FORM ──────────────────────────────────────────────────
+    /**
+     * Builds the main form for client registration, including input fields, info box, message label, and action buttons.
+     * @return JPanel containing the client registration form.
+     */
 
     private JPanel buildForm() {
         JPanel card = new JPanel(new BorderLayout());
@@ -153,7 +166,12 @@ public class NewClientPanel extends JPanel {
         return wrapper;
     }
 
-    // ── FIELD GROUP ───────────────────────────────────────────
+    /**
+     * Creates a labeled input field group with a label and a text field that includes placeholder behavior.
+     * @param label
+     * @param placeholder
+     * @return
+     */
 
     private JPanel makeFieldGroup(String label, String placeholder) {
         JPanel group = new JPanel();
@@ -211,7 +229,10 @@ public class NewClientPanel extends JPanel {
         return group;
     }
 
-    // ── INFO BOX ──────────────────────────────────────────────
+    /**
+     * Builds an informational box that explains the credit evaluation rule applied when registering a new client.
+     * @return JPanel containing the informational box.
+     */
 
     private JPanel buildInfoBox() {
         JPanel box = new JPanel();
@@ -240,7 +261,10 @@ public class NewClientPanel extends JPanel {
         return box;
     }
 
-    // ── BUTTON ROW ────────────────────────────────────────────
+    /**
+     * Builds the row of action buttons ("Register Client" and "Cancel") with their respective styles and event handlers.
+     * @return JPanel containing the action buttons.
+     */
 
     private JPanel buildButtonRow() {
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
@@ -281,8 +305,9 @@ public class NewClientPanel extends JPanel {
         return row;
     }
 
-    // ── MAIN LOGIC ────────────────────────────────────────────
-
+    /**
+     * Main logic 
+     */
     private void registerClient() {
         try {
             String name     = getFieldValue(txtName,     "e.g. Ana Martínez");

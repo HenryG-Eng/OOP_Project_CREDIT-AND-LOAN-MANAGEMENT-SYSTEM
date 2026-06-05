@@ -1,3 +1,9 @@
+/* PROGRAM: A application that calculates the monthly payment for a loan based on the loan amount, interest rate, and loan term. It also generates an amortization table showing the breakdown of each payment over the life of the loan. 
+ * the application purpose is to help users understand the financial implications of taking out a loan and to assist them in making informed decisions about their borrowing options.
+ * @author:Henry Garrido - Cristian Castro
+ * @date: 29-05-2026
+ */
+
 package com.fincredit.gui;
 
 import com.fincredit.model.Client;
@@ -22,10 +28,10 @@ public class LoansPanel extends JPanel {
     
     private JPanel tableContainer;
 
-    // Manejo de objetos: instancia única del registro
+    //Object management
     private final LoanRegistry registry = LoanRegistry.getInstance();
 
-    // Navegación
+    // navigation
     private final CardLayout cardLayout;
     private final JPanel mainPanel;
 
@@ -41,7 +47,10 @@ public class LoansPanel extends JPanel {
         add(buildTable(),  BorderLayout.CENTER);
     }
 
-    // ── TOP BAR ───────────────────────────────────────────────
+    /**
+     * Builds the top bar with title, subtitle and "New Loan" button
+     * @return JPanel with the top bar
+     */
 
     private JPanel buildTopBar() {
         JPanel bar = new JPanel(new BorderLayout());
@@ -57,7 +66,7 @@ public class LoansPanel extends JPanel {
         lblTitle.setFont(new Font("SansSerif", Font.BOLD, 18));
         lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Datos reales del registry
+        // data for subtitle
         List<Loan> loans = registry.getAllLoans();
         long approved = loans.stream().filter(Loan::isApproved).count();
         long rejected = loans.stream()
@@ -75,7 +84,7 @@ public class LoansPanel extends JPanel {
         titleBlock.add(lblSub);
         bar.add(titleBlock, BorderLayout.WEST);
 
-        // Botón navega a NewLoanPanel
+        //button to navigate to new loan form
         JButton btnNew = new JButton("+ Request Loan");
         btnNew.setBackground(BG_NAVY);
         btnNew.setForeground(Color.WHITE);
@@ -103,7 +112,10 @@ public class LoansPanel extends JPanel {
         return bar;
     }
 
-    // ── TABLE ─────────────────────────────────────────────────
+    /**
+     * Builds the table with loan data
+     * @return JPanel containing the table
+     */
     
     private JPanel buildTable() {
         tableContainer = new JPanel(new BorderLayout());
@@ -112,7 +124,11 @@ public class LoansPanel extends JPanel {
         fillTable(tableContainer);
         return tableContainer;
     }
-
+    
+    /**
+     * Fills the given panel with a table containing all loan requests from the registry
+     * @param card
+     */
     public void fillTable(JPanel card) {
     	card.removeAll();
     	
@@ -142,14 +158,13 @@ public class LoansPanel extends JPanel {
             "Principal", "Rate %", "Term", "Monthly Pay",
             "Total Cost", "Status"
         };
-
+        
+        // create non-editable table model
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
-
+        // fill rows
         for (Loan loan : registry.getAllLoans()) {
-
-            
             Client client = registry.getClient(loan.getClientId());
             String clientName = (client != null) ? client.getName() : "Unknown";
 
@@ -172,6 +187,7 @@ public class LoansPanel extends JPanel {
         styleTable(table);
 
         int statusCol = 8;
+        //
         table.getColumnModel().getColumn(statusCol).setCellRenderer(
             (t, value, isSelected, hasFocus, row, col) -> {
                 JLabel lbl = new JLabel(value.toString());
@@ -223,11 +239,13 @@ public class LoansPanel extends JPanel {
         scroll.getViewport().setBackground(BG_WHITE);
         scroll.setBorder(BorderFactory.createEmptyBorder());
         card.add(scroll, BorderLayout.CENTER);
-        
+        // refresh card
         card.revalidate();
         card.repaint();
     }
-    
+    /**
+     * Refreshes the table with the latest loan data from the registry
+     */
     public void refresh() {
         fillTable(tableContainer);
     }

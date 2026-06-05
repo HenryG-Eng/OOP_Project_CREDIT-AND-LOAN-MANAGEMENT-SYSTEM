@@ -8,10 +8,12 @@ package com.fincredit.model;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+/**
+ * Class representing a loan application, including details such as client ID, loan product, principal amount, terms, interest rate, monthly payment, amortization table, status, and evaluation result.
+ */
 public class Loan {
 
-    public enum Status { PENDING, APPROVED, REJECTED }
+    public enum Status { PENDING, APPROVED, REJECTED }//Loan application status
 
     private final String id;
     private final String clientId;
@@ -25,8 +27,7 @@ public class Loan {
     private Status status;
     private EvaluationResult evaluationResult;
 
-    public Loan(String id, String clientId, LoanProduct product,
-                double principal, int terms, double annualRate) {
+    public Loan(String id, String clientId, LoanProduct product, double principal, int terms, double annualRate) {
         this.id               = id;
         this.clientId         = clientId;
         this.product          = product;
@@ -38,12 +39,18 @@ public class Loan {
         this.monthlyPayment   = product.calculateMonthlyPayment(principal, annualRate, terms);
         this.amortizationTable = product.generateAmortizationTable(principal, annualRate, terms);
     }
-
+    /**
+     * Method to approve a loan application, updating the status to APPROVED and storing the evaluation result for reference.
+     * @param result
+     */
     public void approve(EvaluationResult result) {
         this.status           = Status.APPROVED;
         this.evaluationResult = result;
     }
-
+    /**
+     * Method to reject a loan application, updating the status to REJECTED and storing the evaluation result for reference.
+     * @param result
+     */
     public void reject(EvaluationResult result) {
         this.status           = Status.REJECTED;
         this.evaluationResult = result;

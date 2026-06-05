@@ -1,3 +1,9 @@
+/* PROGRAM: A application that calculates the monthly payment for a loan based on the loan amount, interest rate, and loan term. It also generates an amortization table showing the breakdown of each payment over the life of the loan. 
+ * the application purpose is to help users understand the financial implications of taking out a loan and to assist them in making informed decisions about their borrowing options.
+ * @author:Henry Garrido - Cristian Castro
+ * @date: 29-05-2026
+ */
+
 package com.fincredit.gui;
 
 import com.fincredit.model.Client;
@@ -38,8 +44,11 @@ public class ClientsPanel extends JPanel {
         add(buildTable(), BorderLayout.CENTER);
     }
 
-    // ── TOP BAR ───────────────────────────────────────────────
-
+    
+    /**
+     * Builds the top bar with title, subtitle, and "New Client" button.
+     * @return A JPanel containing the top bar components.
+     */
     private JPanel buildTopBar() {
         JPanel bar = new JPanel(new BorderLayout());
         bar.setOpaque(false);
@@ -89,8 +98,11 @@ public class ClientsPanel extends JPanel {
         return bar;
     }
 
-    // ── TABLE ─────────────────────────────────────────────────
-
+    
+    /**
+     * Builds the main table panel that lists all clients with their details and actions.
+     * @return A JPanel containing the clients table.
+     */
     private JPanel buildTable() {
         tableContainer = new JPanel(new BorderLayout());
         tableContainer.setBackground(BG_WHITE);
@@ -98,7 +110,10 @@ public class ClientsPanel extends JPanel {
         fillTable(tableContainer);
         return tableContainer;
     }
-
+    /**
+     * Fills the given card panel with the clients table, including headers, data rows, and action buttons.
+     * @param card
+     */
     private void fillTable(JPanel card) {
         card.removeAll();
 
@@ -265,11 +280,15 @@ public class ClientsPanel extends JPanel {
             }
         );
     }
-
+    /**
+     * Refreshes the clients table by re-fetching data from the registry and updating the display. This should be called after any changes to the client data 
+     */
     public void refresh() {
         fillTable(tableContainer);
     }
-
+    /**
+     * Utility method to print summaries of all clients in the registry to the console. 
+     */
     private void printPersonSummaries() {
         List<Client> clients = registry.getAllClients();
         for (Person p : clients) {

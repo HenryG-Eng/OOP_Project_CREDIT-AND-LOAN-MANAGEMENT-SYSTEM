@@ -5,7 +5,9 @@
  */
 
 package com.fincredit.model;
-
+/**
+ * The AmortizationRow class represents a single row in an amortization table, containing details about the payment for a specific period, including the total payment, interest portion, capital payment, and remaining balance.
+ */
 public class AmortizationRow {
 
     private final int period;

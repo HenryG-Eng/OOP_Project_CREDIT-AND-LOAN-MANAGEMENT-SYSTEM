@@ -5,10 +5,12 @@
  */
 
 package com.fincredit.model;
-
+/**
+ * Class representing an educational loan product, extending the LoanProduct class and providing specific details such as base interest rate, maximum term, and description for student and academic financing.
+ */
 public class EducationalLoan extends LoanProduct {
     public EducationalLoan() { super("EDUCATIONAL", "🎓"); }
-
+    // Overridden methods to provide specific details for the educational loan product
     @Override public double getBaseRate()    { return 5.0; }
     @Override public int getMaxTerm()        { return 120; }
     @Override public String getDescription() { return "Student and academic financing"; }

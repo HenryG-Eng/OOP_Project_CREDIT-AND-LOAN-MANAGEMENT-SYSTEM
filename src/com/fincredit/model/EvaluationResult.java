@@ -5,7 +5,9 @@
  */
 
 package com.fincredit.model;
-
+/**
+ * Class representing the result of a loan evaluation, including approval status, monthly payment, maximum payment capacity, payment ratio, reason for decision, and evaluator's name.
+ */
 public class EvaluationResult {
 
     private final boolean approved;
@@ -14,7 +16,15 @@ public class EvaluationResult {
     private final double paymentRatio;
     private final String reason;
     private final String evaluatorName;
-
+    /**
+     * 
+     * @param approved
+     * @param monthlyPayment
+     * @param maxCapacity
+     * @param paymentRatio
+     * @param reason
+     * @param evaluatorName
+     */
     public EvaluationResult(boolean approved, double monthlyPayment,
                             double maxCapacity, double paymentRatio,
                             String reason, String evaluatorName) {

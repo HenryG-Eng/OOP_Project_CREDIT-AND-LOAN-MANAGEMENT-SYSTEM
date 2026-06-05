@@ -12,7 +12,10 @@ import com.fincredit.persistence.ClientFileManager;
 import com.fincredit.persistence.LoanFileManager;
 
 import java.util.*;
-
+/**
+ * LoanRegistry — Centralized management of clients and loans, implemented as a singleton to ensure a single instance throughout the application.
+ *  It provides methods for registering clients, requesting loans, and retrieving client and loan information. The registry also handles loading and saving data to files, as well as seeding initial data if no records are found.
+ */
 public class LoanRegistry {
 
     private static LoanRegistry instance;
@@ -43,10 +46,13 @@ public class LoanRegistry {
         return instance;
     }
 
-    // ── LOAD FROM FILES ───────────────────────────────────────
+    /**
+     * Loads clients and loans from their respective files. For each loaded client and loan, it updates the internal maps and ensures that the sequence numbers for generating new IDs 
+     * are set correctly to avoid collisions with existing records.
+     */
 
     private void loadFromFiles() {
-        List<Client> savedClients = ClientFileManager.loadClients();
+        List<Client> savedClients = ClientFileManager.loadClients();// Load clients first to ensure we can link loans to existing clients
         for (Client client : savedClients) {
             clients.put(client.getId(), client);
             try {
@@ -58,6 +64,7 @@ public class LoanRegistry {
         }
 
         List<Loan> savedLoans = LoanFileManager.loadLoans();
+        // Load loans and link them to clients
         for (Loan loan : savedLoans) {
             loans.put(loan.getId(), loan);
             Client client = clients.get(loan.getClientId());
@@ -72,8 +79,6 @@ public class LoanRegistry {
             }
         }
     }
-
-    // ── SEED DATA ─────────────────────────────────────────────
 
     private void seedData() {
         Client ana    = registerClient("Ana Martínez",  "CC-1001",
@@ -91,7 +96,16 @@ public class LoanRegistry {
         requestLoan(diego.getId(),  "FREE_INVESTMENT", 50_000_000,  48, null);
     }
 
-    // ── REGISTER CLIENT ───────────────────────────────────────
+    /**
+     * Registers a new client with the provided information, generates a unique ID for the client, and saves the updated list of clients to disk.
+     *  The method returns the newly created Client object.
+     * @param name
+     * @param document
+     * @param email
+     * @param monthlyIncome
+     * @param monthlyExpenses
+     * @return
+     */
 
     public Client registerClient(String name, String document, String email,
                                  double monthlyIncome, double monthlyExpenses) {
@@ -102,8 +116,6 @@ public class LoanRegistry {
         ClientFileManager.saveClients(getAllClients());
         return client;
     }
-
-    // ── DELETE CLIENT ─────────────────────────────────────────
 
     /**
      * Deletes a client and all their associated loans from the registry.
@@ -132,7 +144,15 @@ public class LoanRegistry {
         return true;
     }
 
-    // ── REQUEST LOAN ──────────────────────────────────────────
+    /**
+     * Processes a loan request for a given client and product type, calculating the monthly payment and evaluating the client's creditworthiness using the provided evaluator.
+     * @param clientId
+     * @param productType
+     * @param principal
+     * @param terms
+     * @param customRate
+     * @return the created Loan object, which will have its status set to approved or rejected based on the evaluation result. The loan is also saved to disk and linked to the client.
+     */
 
     public Loan requestLoan(String clientId, String productType,
                             double principal, int terms, Double customRate) {
@@ -156,7 +176,12 @@ public class LoanRegistry {
         return loan;
     }
 
-    // ── GETTERS ───────────────────────────────────────────────
+    /**
+     * Retrieves a client or loan by their unique ID from the registry. If the ID does not exist, it returns null.
+     * @param id
+     * @return
+     */
+    
 
     public Client getClient(String id)  { return clients.get(id); }
     public Loan   getLoan(String id)    { return loans.get(id); }
