@@ -8,6 +8,8 @@
 package com.fincredit.gui;
 
 import com.fincredit.logic.LoanProductFactory;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import com.fincredit.model.AmortizationRow;
 import com.fincredit.model.Client;
 import com.fincredit.model.Loan;
@@ -67,6 +69,12 @@ public class NewLoanPanel extends JPanel {
 
         add(buildTopBar(),  BorderLayout.NORTH);
         add(buildContent(), BorderLayout.CENTER);
+        
+        addAncestorListener(new AncestorListener() {
+            public void ancestorAdded(AncestorEvent e)   { refreshClients(); }
+            public void ancestorMoved(AncestorEvent e)   {}
+            public void ancestorRemoved(AncestorEvent e) {}
+        });
     }
 
     /**
@@ -833,6 +841,22 @@ public class NewLoanPanel extends JPanel {
         combo.setPreferredSize(new Dimension(0, 36));
         combo.setBorder(BorderFactory.createLineBorder(BORDER, 1));
     }
+    
+    public void refreshClients() {
+        if (cmbClient == null) return;
+        int previousIndex = cmbClient.getSelectedIndex();
+        cmbClient.removeAllItems();
+        cmbClient.addItem("— Choose client —");
+        for (Client c : registry.getAllClients()) {
+            cmbClient.addItem(c.getId() + " · " + c.getName() +
+                              " · Income: $" + String.format("%,.0f", c.getMonthlyIncome()));
+        }
+        if (previousIndex > 0 && previousIndex < cmbClient.getItemCount()) {
+            cmbClient.setSelectedIndex(previousIndex);
+        } else {
+            cmbClient.setSelectedIndex(0);
+        }
+    }
 
     private JPanel makePreviewRow(String label, JLabel valueLabel, Color valueColor) {
         JPanel row = new JPanel(new BorderLayout());
@@ -895,5 +919,6 @@ public class NewLoanPanel extends JPanel {
                 BorderFactory.createLineBorder(BORDER, 1),
                 BorderFactory.createEmptyBorder(6, 12, 6, 12)
         ));
+     
     }
 }

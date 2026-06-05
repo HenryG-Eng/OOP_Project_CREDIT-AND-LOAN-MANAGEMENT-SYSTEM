@@ -1,0 +1,7 @@
+module:Final_Project_OOP
+com.fincredit.gui
+com.fincredit.interfaces
+com.fincredit.logic
+com.fincredit.model
+com.fincredit.persistence
+com.fincredit.registry

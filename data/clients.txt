@@ -1,0 +1,4 @@
+C0002,Carlos Rivera,CC-1002,carlos@email.com,8000000.0,3200000.0
+C0003,Laura Torres,CC-1003,laura@email.com,3200000.0,2600000.0
+C0004,Diego Suárez,CC-1004,diego@email.com,1.2E7,4000000.0
+C0006,Henry,1212,sadds@asa.com,222.0,2.0
